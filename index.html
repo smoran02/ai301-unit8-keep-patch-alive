@@ -1579,8 +1579,8 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     n: 1, name: 'The quiet week', days: 'Days 1 to 7', aim: 10, scene: 'doomscroll',
     intro: [
       'Day 1. You just opened PR #233 on playlistr. It fixes issue #191: shuffle can play the same song twice in a row.',
-      'Ren, the lead maintainer, is on vacation until day 8. Things will land on the thread anyway. Monty reads each one and drafts a move, and it\'s 100% confident every time. You decide what actually happens.',
-      'Not everything on the thread needs an answer. Reply when someone asks you a question or a reviewer asks for a change.'
+      'Ren, the lead maintainer, is on vacation until day 8. Things will land on the thread anyway. Monty reads each one and drafts a move, and it\'s 100% confident every time. Monty only sees the PR (comments, checks, quiet days), never the code. You decide what actually happens.',
+      'Not everything on the thread needs an answer. Reply when someone is waiting on you, like a question or a requested change.'
     ],
     renStatus: 'On vacation until day 8',
     turns: [
@@ -1797,7 +1797,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 
       { id: 'w2-renq', type: 'monty', day: 11,
         events: [{ who: 'ren', text: 'Thanks, the seed info really helps. I\'ll add the CHANGELOG line and update the seeded test myself when I cut the release. One quick question before I re-review: is `history` always a list, or can it be a tuple? I\'m swamped this week, so if I haven\'t re-reviewed in a week, ping me here.' }],
-        read: { state: 'Feedback in', why: 'A comment from someone other than you arrived since my last run.', checks: '3 passing', review: 'review requested', quiet: 0, merge: 'no conflicts' },
+        read: { state: 'Feedback in', why: 'A comment from someone other than you arrived since my last run. I read the PR, not the code.', checks: '3 passing', review: 'review requested', quiet: 0, merge: 'no conflicts' },
         draft: { kind: 'message', lines: ['It\'s always a list. `Player.history` starts as `[]` on line 41 of `playlistr/player.py`, and nothing else assigns to it.'] },
         options: {
           send: { say: 'Monty only reads the PR: comments, checks, quiet days. It never opened the code, so "nothing else assigns to it" is a guess, and Ren will rely on it.' },
