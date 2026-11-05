@@ -1619,7 +1619,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
           skip: { right: true, say: 'Read a failing check before you act on it. This one is red on main too, and CONTRIBUTING.md says it doesn\'t count against a PR that doesn\'t touch `docs/`. Monty can\'t tell whose fault a red check is. You can.' }
         } },
 
-      { id: 'w1-max', type: 'monty', day: 2,
+      { id: 'w1-max', type: 'monty', day: 2, hatch: true,
         events: [{ who: 'mixtape-max', text: 'Does this also fix the repeat when the playlist loops back to the start? That\'s #188.' }],
         read: { state: 'Feedback in', why: 'A comment from someone other than you arrived since my last run.', checks: '2 passing, 1 failing', review: 'none', quiet: 0, merge: 'no conflicts' },
         draft: { kind: 'message', lines: ['No, this PR only fixes back-to-back repeats within one pass through the playlist (#191).', 'The repeat at the loop point is #188. I left it out so this PR stays on one issue.'] },
@@ -1629,21 +1629,11 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
           skip: { say: 'Max asked you a direct question about your PR. Leaving it unanswered means Max, and later Ren, has to guess.' }
         } },
 
-      { id: 'w1-pete', type: 'monty', day: 3, hatch: true,
-        events: [{ who: 'plus-one-pete', text: '+1, would love to see this merged!!' }],
-        read: { state: 'Feedback in', why: 'A comment from someone other than you arrived since my last run.', checks: '2 passing, 1 failing', review: 'none', quiet: 0, merge: 'no conflicts' },
-        draft: { kind: 'message', lines: ['Hi Pete, thanks for the interest!', 'Ren hasn\'t reviewed it yet, but I\'ll ping them again tomorrow to speed things up.'] },
-        options: {
-          send: { say: 'A +1 means "me too". Pete didn\'t ask you anything. This reply also promises to ping Ren, who\'s on vacation, on Pete\'s behalf.' },
-          fix: { say: 'Cut the ping promise and you\'re left with "thanks for the interest", which still sends everyone on the thread a notification for nothing.' },
-          skip: { right: true, say: 'A +1 means "me too". It\'s a vote, not a question. Monty drafted a reply because the real PR-monitor treats any comment from someone else as news, even a +1.' }
-        } },
-
       { id: 'w1-conflict', type: 'monty', day: 4, mood: 'knotted',
         events: [{ note: 'mira merged #234 into main: Rename `pick_next()` to `next_track()`' },
                  { note: 'mira merged #235 into main: Pin Sphinx below 8 so the docs job passes again' },
                  { status: 'This branch has conflicts that must be resolved. Conflicting file: `playlistr/shuffle.py`' }],
-        read: { state: 'Branch needs work', why: 'The branch has merge conflicts with main.', checks: '2 passing, 1 failing', review: 'none', quiet: 1, merge: 'conflicts' },
+        read: { state: 'Branch needs work', why: 'The branch has merge conflicts with main.', checks: '2 passing, 1 failing', review: 'none', quiet: 2, merge: 'conflicts' },
         draft: { kind: 'plan', lines: ['1. Get playlistr\'s newest main: `git fetch upstream` (`upstream` is playlistr\'s own repo; `origin` is your fork)', '2. Rebase your branch onto it: `git rebase upstream/main`', '3. Fix the conflict git flags in `playlistr/shuffle.py`, then `git add playlistr/shuffle.py` and `git rebase --continue`', '4. Re-run your ship-gate\'s checks: `uv run pytest` and `uv run ruff check .`', '5. Push to your fork: `git push --force-with-lease origin fix/191-no-repeat` (the rebase rewrote your commit, so a plain push gets refused)'] },
         options: {
           send: { right: true, say: 'That\'s the safe order: fetch, rebase, fix the conflict, re-run your checks, push to your fork. Monty plans it. You run it, and the plan stays above your terminal while you do.' },
@@ -1679,19 +1669,8 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
           { label: 'git push --force-with-lease origin fix/191-no-repeat', mono: true, right: true, say: 'That\'s step 5. The rebase rewrote your branch\'s history, so the push has to replace what\'s on your fork, not add to it. `--force-with-lease` refuses if anyone else pushed to your branch since you fetched. Git\'s pull hint is for when GitHub has new work your laptop doesn\'t, like someone else\'s commit. Here the only thing GitHub has that your branch doesn\'t is your own old commit, which the rebase replaced.', out: ['+ 3f9e2a1...9c1d4b7 fix/191-no-repeat -> fix/191-no-repeat (forced update)', '# The checks re-run on PR #233. The docs job passes now: your branch has Mira\'s Sphinx fix.'] },
           { label: 'Close PR #233 and open a new one from a fresh branch', say: 'That throws away PR #233\'s thread, including Max\'s question and your answer. Nothing is wrong with your branch. It just needs the push in step 5.' }
         ] },
-      { id: 'w1-quiet', type: 'monty', day: 7,
-        events: [{ checks: [['tests', 'pass', '52 passed'], ['lint', 'pass', 'ruff: all checks passed'], ['docs', 'pass', 'make docs passed (main has Mira\'s Sphinx fix now)']] },
-                 { note: 'No new comments since day 3.' }],
-        read: { state: 'Quiet', why: '4 quiet days. Pete\'s +1 on day 3 was the last comment from anyone but you.', checks: '3 passing', review: 'none', quiet: 4, merge: 'no conflicts',
-                rule: 'Your staleness threshold: 7 quiet days.' },
-        draft: { kind: 'note', lines: ['4 quiet days. Your threshold is 7.', 'No nudge yet. Your threshold is met on day 10.'] },
-        options: {
-          send: { say: NOTE_SEND },
-          fix: { say: 'The note is already right. A quiet day is a day with no comment from anyone but you, and Pete commented on day 3, so it\'s 4. Ren is back tomorrow anyway, so "no nudge yet" is the right call.' },
-          skip: { right: true, say: 'Monty used your 7-day threshold and wrote a wait note instead of a nudge. A wait note is for you, so it stays off the thread. Pete\'s +1 counts as a comment, so the 4 quiet days run from day 3.' }
-        } }
     ],
-    outro: 'PR #233 is up to date with main, every check is green, and Ren is back tomorrow.'
+    outro: 'Day 7. Every check is green. 5 quiet days is under your 7-day threshold, so Monty waits. Ren is back tomorrow.'
   });
 
   // ============================================================ WEEK 2
@@ -1728,36 +1707,13 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
           skip: { say: 'Ren asked for three changes, so it\'s your move now. Saying nothing here looks like you walked away.' }
         } },
 
-      { id: 'w2-suggest', refComment: 0, type: 'choice', term: 'seed', day: 8, ref: 'Ren\'s first comment',
-        ask: 'Ren\'s first comment came with a suggested change. What do you do with it?',
-        options: [
-          { label: 'Click Commit suggestion', right: true, say: 'GitHub turns Ren\'s suggestion into a commit on your fork branch, with Ren as co-author. Your laptop doesn\'t have that commit yet, so pull it before you write the test. This is the case `git pull` is for: new work on GitHub that your laptop doesn\'t have.', out: ['$ git pull', 'Updating 9c1d4b7..e2f7a10', 'Fast-forward', ' playlistr/shuffle.py | 3 ++-', '# Your laptop has Ren\'s commit now. The test goes on top of it.'] },
-          { label: 'Reply that history is never empty in real use', say: 'Ren just showed you when it\'s empty: the first shuffle, before any song has played. Arguing makes Ren spend more time on a bug Ren already fixed for you.' },
-          { label: 'Click Resolve conversation and move on', say: 'Resolving hides the comment without changing the code. Ren will find the bug still there.' }
-        ] },
-
-      { id: 'w2-test', refComment: 1, type: 'choice', day: 8, ref: 'Ren\'s second comment',
-        ask: 'Ren\'s second comment asks for a test with a one-song playlist. Which test do you add?',
-        options: [
-          { label: 'Test A', code: ['def test_one_song_never_repeats():', '    assert next_track(["solo"], ["solo"]) != "solo"'], say: 'With one song there\'s nothing else to pick, so this test asks for the impossible. It fails no matter what the code does.' },
-          { label: 'Test B', right: true, code: ['def test_one_song_plays_again():', '    assert next_track(["solo"], ["solo"]) == "solo"'], say: 'With one song, playing it again is the only right answer, and this test pins that down.' },
-          { label: 'Test C', code: ['def test_one_song():', '    next_track(["solo"], ["solo"])'], say: 'This runs the code but checks nothing. It passes even if `next_track()` returns the wrong song.' }
-        ] },
-
       { id: 'w2-seed', refComment: 2, type: 'choice', term: 'seed', day: 8, ref: 'Ren\'s third comment',
+        termStart: ['# You clicked Commit suggestion on Ren\'s first comment, then pulled it.', '$ git pull', 'Updating 9c1d4b7..e2f7a10', 'Fast-forward', ' playlistr/shuffle.py | 3 ++-', '# For Ren\'s second comment, you added a one-song test.', '$ git commit -am "Add test_one_song_plays_again"', '[fix/191-no-repeat 5b8e0c2] Add test_one_song_plays_again'],
         ask: 'Ren\'s third comment asks whether `shuffle(seed=42)` still gives 2.3\'s order. You don\'t know. What now?',
         options: [
           { label: 'Answer yes. Monty\'s earlier draft said it\'s the same.', say: 'Nobody checked. If it\'s wrong, Ren finds out from a user whose party playlist changed.' },
           { label: 'Run `tests/test_seeded.py` on your branch', right: true, say: 'You checked instead of guessing. Your fix does change the seeded order. CI skips this slow test, which is why every check stayed green.', out: ['$ uv run pytest tests/test_seeded.py', 'FAILED test_seed_42_order', 'expected: [\'b\', \'d\', \'a\', \'c\']', 'got:      [\'b\', \'a\', \'d\', \'c\']'] },
           { label: 'Ask Ren to check it', say: 'Ren asked you, and checking is one command on your branch.' }
-        ] },
-
-      { id: 'w2-seedtell', type: 'choice', day: 8, mood: 'nervous',
-        ask: 'Your fix changes the seeded order. What do you tell Ren?',
-        options: [
-          { label: 'Delete `test_seed_42_order`, since it\'s out of date now', say: 'That test is how playlistr keeps its promise to users. Deleting it hides the change instead of reporting it.', mood: 'side' },
-          { label: 'Undo your fix so the seeded test passes again', say: 'Then PR #233 doesn\'t fix #191 anymore, and Ren still doesn\'t know why.' },
-          { label: 'Say it changes, show the failing test, and give Ren two options to pick from', right: true, say: 'Ren gets the evidence and the decision. Two options: a CHANGELOG line, or skip repeats only when no seed is set.' }
         ] },
 
       { id: 'w2-push', type: 'choice', day: 9,
@@ -2183,7 +2139,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       banner: 'Demo Version',
       restart: 'Restart demo', leave: 'Leave demo',
       endTitle: 'That\'s the demo.',
-      end: ['The real game is four weeks of one PR, about {calls} calls.', 'Open it with your breakout room number.']
+      end: ['The real game is four weeks of one PR, about {calls} questions.', 'Open it with your breakout room number.']
     }
   };
 
@@ -2307,7 +2263,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
         phase: 'egg', color: null, name: null, nameIdx: 0,
         stage: 'egg', hatched: false, leftAsEgg: false,
         owned: [], wearing: [],
-        week: 1, idx: 0, hearts: HEARTS, h4: true,
+        week: 1, idx: 0, hearts: HEARTS, h4: true, cut5: true,
         attempt: {}, walkouts: {}, weekStart: {}, weekPassedAt: {}, perfect: {},
         lost: {},            // hearts lost per week, all attempts
         mistakes: [],        // this attempt's wrong calls: what sent Patch away
@@ -2352,8 +2308,25 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 
     // A save from the 3-heart version gets its fourth heart once, so a room
     // at full health shows 4 of 4.
+    // Weeks 1 and 2 lost five turns on 2026-11-04. A save from before that
+    // keeps its place: same turn, or the next one that still exists.
+    var OLD_ORDER = {
+      1: ['w1-rule', 'w1-bot', 'w1-docs', 'w1-max', 'w1-pete', 'w1-conflict', 'w1-resolve', 'w1-checks', 'w1-push', 'w1-quiet'],
+      2: ['w2-rule', 'w2-review', 'w2-suggest', 'w2-test', 'w2-seed', 'w2-seedtell', 'w2-push', 'w2-reply', 'w2-hank', 'w2-renq', 'w2-status', 'w2-submit']
+    };
     function upgrade(s) {
-      if (s && !s.h4) { if (s.hearts > 0) s.hearts = Math.min(HEARTS, s.hearts + 1); s.h4 = true; }
+      if (!s) return s;
+      if (!s.h4) { if (s.hearts > 0) s.hearts = Math.min(HEARTS, s.hearts + 1); s.h4 = true; }
+      if (!s.cut5) {
+        s.cut5 = true;
+        var old = OLD_ORDER[s.week], ids = weekTurns(s.week).map(function (t) { return t.id; });
+        if (old && ids[0] === old[0] && (s.phase === 'turn' || s.phase === 'walkout')) {
+          var at = old.slice(s.idx).filter(function (id) { return ids.indexOf(id) >= 0; })[0];
+          if (!at) { s.idx = ids.length - 1; s.ts = freshTurn(); s.ts.done = true; }
+          else { if (old[s.idx] !== at) s.ts = freshTurn(); s.idx = ids.indexOf(at); }
+        }
+        s.mistakes = (s.mistakes || []).filter(function (m) { return ids.indexOf(m.turn) >= 0; });
+      }
       return s;
     }
 
@@ -2603,7 +2576,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     function badges(s) {
       var out = [];
       var ew = s.everWrong;
-      if (s.weekPassedAt[1] && s.weekPassedAt[2] && !ew['w1-bot'] && !ew['w1-pete'] && !ew['w2-hank']) out.push({ id: 'trolls', name: 'Didn\'t feed the trolls', why: 'Turned down every reply to a bot, a +1, and a hot take on the first try.' });
+      if (s.weekPassedAt[1] && s.weekPassedAt[2] && !ew['w1-bot'] && !ew['w2-hank']) out.push({ id: 'trolls', name: 'Didn\'t feed the trolls', why: 'Turned down the replies to a bot and a hot take on the first try.' });
       var rebase = ['w1-conflict', 'w1-resolve', 'w1-checks', 'w1-push'];
       if (s.weekPassedAt[1] && rebase.every(function (t) { return !ew[t]; })) out.push({ id: 'rebase', name: 'Clean rebase', why: 'Ran the whole rebase without a wrong step.' });
       if (s.flags.ghost && s.weekPassedAt[4]) out.push({ id: 'ghost', name: 'Ghost hunter', why: 'Found the ghost ending, then came back and closed #236 properly.' });
