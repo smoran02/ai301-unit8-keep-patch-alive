@@ -100,6 +100,10 @@ b, strong { font-weight: 600; }
 .cta:hover:not(:disabled) { background: var(--peri-dark); }
 .cta:disabled { background: #DDE1E6; color: #4A5A6A; }
 .ghost { background: var(--doc); color: var(--ink); font-weight: 500; padding: 11px 20px; border-radius: var(--r); }
+.hintbtn { background: var(--butter); color: var(--ink); font-weight: 600; padding: 11px 20px; border-radius: var(--r); box-shadow: inset 0 0 0 2px #F2D43D; }
+.hintbtn:hover { background: #FFEE8A; }
+.restart { font-size: 20px; margin: 4px auto 10px; color: var(--ink); }
+.lastheart { font-weight: 600; margin: 2px 0 6px; }
 .ghost:hover { background: #EAEDF1; }
 .linkish { color: var(--peri-dark); text-decoration: underline; font-weight: 600; padding: 0; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
@@ -183,6 +187,7 @@ details.repo { background: var(--doc); border-radius: var(--r); padding: 12px 16
 details.repo summary { cursor: pointer; font-weight: 600; }
 details.repo ol { padding-left: 20px; margin: 8px 0 4px; }
 details.repo li { margin-bottom: 6px; }
+details.repo.inturn { margin-bottom: 14px; }
 
 /* ------------------------------------------------------------ week header */
 .weekhead { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
@@ -432,12 +437,11 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 /* ------------------------------------------------------------ small screens */
 @media (max-width: 980px) {
   .game { grid-template-columns: minmax(0, 1fr); }
-  /* One column: Patch, then the turn, then Monty's playbook and CONTRIBUTING.md. */
+  /* One column: Patch, then the turn, then Monty's playbook. */
   .side { display: contents; }
   .side > .pet { order: 1; }
   .game > .main { order: 2; }
   .side > .monty { order: 3; }
-  .side > .repo { order: 4; }
   .pet .home { height: 170px; }
   .pet canvas.main { width: 170px; height: 170px; margin-bottom: -13px; }
   .pet canvas.sib { width: 90px; height: 90px; margin-bottom: -7px; }
@@ -1479,7 +1483,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
    right option, and each wrong option's `say` shows what Monty would
    have drafted with it. The right option's rule is written into the
    playbook (C.playbook holds the written text), and later turns cite it.
-   `evidence` adds the chart or quotes the room needs to pick.
+   `evidence` adds the quotes (and 'chart') the room needs to pick, in order.
 
    Text uses `code` for code. No other markup. */
 (function (G) {
@@ -1585,7 +1589,8 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     renStatus: 'On vacation until day 8',
     turns: [
       // Rule 1 of 4 opens the week.
-      { id: 'w1-rule', type: 'choice', rule: 'quiet', day: 1, evidence: 'chart',
+      { id: 'w1-rule', type: 'choice', rule: 'quiet', day: 1,
+        evidence: [{ from: 'playlistr\'s CONTRIBUTING.md', text: 'Reviews usually take about a week. If a week passes with no reply, one polite ping on the PR is welcome.' }, 'chart'],
         why: 'Monty\'s playbook is empty. When your PR goes quiet, Monty can write a nudge, a short comment that asks the maintainer to take a look. Monty counts quiet days: days since anyone but you commented. This rule decides how many quiet days Monty waits first.',
         ask: 'How many quiet days should Monty wait before it writes a nudge?',
         options: [
@@ -2189,20 +2194,20 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 <script>
 /* Keep Patch Alive: game rules. No DOM here, so test_core.mjs can run it in Node.
 
-   A week is a level the room must pass. Each week starts with 3 hearts. A
-   wrong call costs a heart, shows why right away, and crosses that option
-   out. At 0 hearts Patch walks out: the room sees what sent Patch away,
-   wins Patch back with a snack, and picks up at the first call it got
-   wrong on that try, with 3 hearts and the options reshuffled. Everything
-   before that call stays done. After 2 walk-outs in one week, "Ask Ren"
-   hints appear. Clocks only suggest a pace; nothing here reads the time
+   A week is a level the room must pass. Each week starts with 4 hearts. A
+   wrong call shows why right away and crosses that option out. Only the
+   first wrong call on a turn costs a heart. At 0 hearts Patch walks out:
+   the room sees what sent Patch away, wins Patch back with a snack, and
+   picks up at the first call it got wrong on that try, with 4 hearts and
+   the options reshuffled. Everything before that call stays done. After
+   the first walk-out in a week, "Ask Ren" hints appear. Clocks only suggest a pace; nothing here reads the time
    except to report it. */
 (function (G) {
   'use strict';
   // One rules engine per content set: the real game (KPA_CORE, from
   // KPA_CONTENT) and the TF demo (KPA_DEMO_CORE, from KPA_CONTENT.demo).
   function make(C) {
-    var HEARTS = 3;
+    var HEARTS = 4;
     var MONTY_IDS = ['send', 'fix', 'skip'];
     var ITEM_ORDER = ['headphones', 'beanie', 'bowtie', 'glasses', 'guitar', 'shades', 'halo'];
     var RARE = ['shades', 'halo'];
@@ -2302,7 +2307,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
         phase: 'egg', color: null, name: null, nameIdx: 0,
         stage: 'egg', hatched: false, leftAsEgg: false,
         owned: [], wearing: [],
-        week: 1, idx: 0, hearts: HEARTS,
+        week: 1, idx: 0, hearts: HEARTS, h4: true,
         attempt: {}, walkouts: {}, weekStart: {}, weekPassedAt: {}, perfect: {},
         lost: {},            // hearts lost per week, all attempts
         mistakes: [],        // this attempt's wrong calls: what sent Patch away
@@ -2345,7 +2350,18 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     // ------------------------------------------------------------ playing a turn
     function hatch(s) { if (!s.hatched) { s.hatched = true; s.stage = 'sprout'; } }
 
+    // A save from the 3-heart version gets its fourth heart once, so a room
+    // at full health shows 4 of 4.
+    function upgrade(s) {
+      if (s && !s.h4) { if (s.hearts > 0) s.hearts = Math.min(HEARTS, s.hearts + 1); s.h4 = true; }
+      return s;
+    }
+
+    // Only a turn's first wrong call costs a heart. Later misses on the same
+    // turn still show why, and return false (no walk-out).
     function loseHeart(s, turnId, label, say) {
+      if (s.ts.charged) { s.everWrong[turnId] = true; return false; }
+      s.ts.charged = true;
       s.hearts = Math.max(0, s.hearts - 1);
       s.lost[s.week] = (s.lost[s.week] || 0) + 1;
       s.everWrong[turnId] = true;
@@ -2378,8 +2394,9 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       if (o.ghost) s.flags.ghost = true;
       s.ts.crossed.push(optId);
       s.ts.lastWrong = optId;
+      var free = !!s.ts.charged;
       var walked = loseHeart(s, r.id, o.label, o.say);
-      return { right: false, say: o.say, option: o, walkout: walked, ghost: !!o.ghost };
+      return { right: false, say: o.say, option: o, walkout: walked, ghost: !!o.ghost, free: free };
     }
 
     // Editor: which draft lines are cut and which tray lines are added.
@@ -2414,9 +2431,10 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
         return { right: true, say: r.raw.say };
       }
       s.ts.problems = probs;
+      var free = !!s.ts.charged;
       var walked = loseHeart(s, r.id, 'Sent it with ' + probs.length + ' problem' + (probs.length === 1 ? '' : 's'),
         probs.map(function (p) { return p.say; }).join(' '));
-      return { right: false, problems: probs, walkout: walked };
+      return { right: false, problems: probs, walkout: walked, free: free };
     }
 
     // Scenes have no decision.
@@ -2448,7 +2466,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     }
 
     // ------------------------------------------------------------ hints
-    function hintsOn(s) { return (s.walkouts[s.week] || 0) >= 2; }
+    function hintsOn(s) { return (s.walkouts[s.week] || 0) >= 1; }
     // Cross out one wrong option, or point at one editor problem. Free.
     function useHint(s) {
       if (!hintsOn(s) || s.ts.done) return null;
@@ -2622,7 +2640,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       val: val, week: week, weekTurns: weekTurns, resolve: resolve, current: current, ordered: ordered, hash: hash,
       newState: newState, setEgg: setEgg, rerollName: rerollName, setName: setName, ruleTurns: ruleTurns, rulesWritten: rulesWritten,
       beginWeek: beginWeek, hatch: hatch, choose: choose, toggleCut: toggleCut, toggleAdd: toggleAdd, editorProblems: editorProblems,
-      composed: composed, submitEdit: submitEdit, sceneDone: sceneDone, next: next, hintsOn: hintsOn, useHint: useHint,
+      composed: composed, submitEdit: submitEdit, sceneDone: sceneDone, next: next, hintsOn: hintsOn, useHint: useHint, upgrade: upgrade,
       walkOutLine: walkOutLine, restartIdx: restartIdx, winBack: winBack, wear: wear, toggleWear: toggleWear, itemOffer: itemOffer, pickItem: pickItem,
       startOvertime: startOvertime, openPet: openPet, petChoose: petChoose, petsHappy: petsHappy,
       startBoss: startBoss, bossSort: bossSort, bossLeft: bossLeft, bossSend: bossSend,
@@ -2901,7 +2919,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
   function heartsHtml() {
     var out = '';
     for (var i = 0; i < K.HEARTS; i++) out += '<canvas width="28" height="28" data-heart="' + (i < s.hearts ? 1 : 0) + '"' + (i === ui.lostAt ? ' class="pop"' : '') + ' aria-hidden="true"></canvas>';
-    return '<div class="hearts" role="img" aria-label="' + s.hearts + ' of 3 hearts">' + out + '</div>';
+    return '<div class="hearts" role="img" aria-label="' + s.hearts + ' of ' + K.HEARTS + ' hearts">' + out + '</div>';
   }
   function paintHearts() {
     var hs = document.querySelectorAll('canvas[data-heart]');
@@ -2941,10 +2959,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       '<div class="pname">' + esc(s.name || '???') + '</div><div class="pstage">' + stageLine() + '</div>' + (sib ? '<div class="pstage">' + esc(s.sibling.name) + ' · PR #236</div>' : '') +
       (showHearts ? heartsHtml() : '') + '<div class="mood" id="mood">' + moodLine() + '</div>' + wardrobe + '</section>';
     var monty = montyPanelHtml();
-    // Open by default; if the room closes it, it stays closed as screens change.
-    var repo = '<details class="repo"' + (ui.repoClosed ? '' : ' open') + '><summary>' + esc(C.repo || 'playlistr') + '\'s CONTRIBUTING.md</summary><ol>' +
-      C.contributing.map(function (x) { return '<li>' + fmt(x) + '</li>'; }).join('') + '</ol></details>';
-    return pet + monty + repo;
+    return pet + monty;
   }
   function drawBubble() {
     var home = document.querySelector('.pet .home');
@@ -3038,9 +3053,9 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       '<canvas width="240" height="240" data-draw="hero" aria-hidden="true"></canvas></div></section>' +
       '<div class="narrow"><p class="eyebrow">How it works</p>' +
       '<ol class="steps">' +
-      '<li><b>One screen per room.</b> One person shares this page in your breakout room and clicks for everyone. Talk each call through before you click. Want your own copy too? Open the game on your laptop and type the same room number.</li>' +
+      '<li><b>One screen per room.</b> One person shares this page in your breakout room and clicks for everyone. Talk it through before you click. Want your own copy too? Open the game on your laptop and type the same room number.</li>' +
       '<li><b>Four weeks, four levels.</b> The game follows your PR for four weeks. Each week shows a suggested time, and going over is fine.</li>' +
-      '<li><b>Three hearts a week.</b> A wrong call costs one. Run out and Patch walks out. Win Patch back, then pick up at the first call you got wrong. You have to pass a week to move on.</li>' +
+      '<li><b>Four hearts a week.</b> Only your first wrong pick on a turn costs one. Run out and you don\'t start over: you go back to your first wrong pick, with hints on.</li>' +
       '<li><b>One new rule a week.</b> Monty drafts from a playbook of rules. Each week starts with your room writing one more rule into it.</li>' +
       '</ol>' + resume + form +
       '<p class="soft" style="margin-top:14px">Nothing to install, and it uses no Claude credits.</p></div>';
@@ -3102,8 +3117,21 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
   function evidenceHtml(r) {
     var ev = r.raw.evidence;
     if (!ev) return '';
-    if (ev === 'chart') return chartHtml();
-    return '<div class="evidence">' + ev.map(function (q) { return '<div class="ev-q"><span class="ev-from">' + esc(q.from) + '</span>' + fmt(q.text) + '</div>'; }).join('') + '</div>';
+    var out = '', qs = [];
+    function flush() { if (qs.length) { out += '<div class="evidence">' + qs.join('') + '</div>'; qs = []; } }
+    [].concat(ev).forEach(function (q) {
+      if (q === 'chart') { flush(); out += chartHtml(); }
+      else qs.push('<div class="ev-q"><span class="ev-from">' + esc(q.from) + '</span>' + fmt(q.text) + '</div>');
+    });
+    flush();
+    return out;
+  }
+  // The repo's CONTRIBUTING.md, one click away at the top of every turn (not
+  // only the turns it decides, so it never gives an answer away). Closed until
+  // the room opens it; then it stays open from turn to turn until closed.
+  function repoHtml() {
+    return '<details class="repo inturn"' + (ui.repoOpen ? ' open' : '') + '><summary>' + esc(C.repo || 'playlistr') + '\'s CONTRIBUTING.md</summary><ol>' +
+      C.contributing.map(function (x) { return '<li>' + fmt(x) + '</li>'; }).join('') + '</ol></details>';
   }
   function ruleHtml(r) {
     var i = C.playbook.findIndex(function (row) { return row.id === r.raw.rule; }), row = C.playbook[i];
@@ -3128,7 +3156,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 
   function weekHead() {
     var w = weekCfg();
-    var hint = K.hintsOn(s) ? ' · Ask ' + esc(HELPER) + ' is on' : '';
+    var hint = K.hintsOn(s) ? ' · Hints on' : '';
     return '<div class="weekhead"><div><p class="eyebrow">' + esc(w.label || 'Week ' + w.n) + ' · ' + esc(w.days) + (s.attempt[w.n] > 1 ? ' · Try ' + s.attempt[w.n] : '') + hint + '</p><h2>' + esc(w.name) + '</h2></div>' + paceHtml() + '</div>';
   }
 
@@ -3185,7 +3213,9 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       return '<div class="say right" role="status"><div class="h">Right.</div><div>' + fmt(nm(x.text)) + '</div>' +
         (row ? '<div class="written"><span>\u2731</span>Written into Monty\'s playbook: <b>' + esc(row.title) + '</b></div>' : '') + '</div>';
     }
-    var h = '<div class="h"><canvas width="21" height="21" data-heart="0" aria-hidden="true"></canvas>Minus one heart</div>';
+    var h = x.free ? '<div class="h">No heart lost. Only the first wrong pick on a turn costs one.</div>'
+      : '<div class="h"><canvas width="21" height="21" data-heart="0" aria-hidden="true"></canvas>Minus one heart</div>' +
+        (s.phase === 'turn' && s.hearts === 1 ? '<div class="lastheart">Last heart. Run out and you go back to day ' + K.resolve(K.weekTurns(s.week)[K.restartIdx(s)]).day + '.</div>' : '');
     if (x.problems) {
       return '<div class="say wrong" role="alert">' + h + '<div>Not ready to send yet:</div><ul>' + x.problems.map(function (p) {
         var what = p.kind === 'cut' ? 'Still in: ' : p.kind === 'keep' ? 'You cut: ' : p.kind === 'need' ? 'Missing: ' : 'You added: ';
@@ -3200,7 +3230,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
   }
   function hintHtml() {
     if (!K.hintsOn(s) || s.ts.done) return '';
-    return '<button class="ghost" data-act="hint" type="button">Ask ' + esc(HELPER) + ' for a hint</button>';
+    return '<button class="hintbtn" data-act="hint" type="button">Get a hint</button>';
   }
 
   function optionButtons(r, cls) {
@@ -3288,8 +3318,8 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
     }
     if (x.kind === 'replay') {
       return '<div class="card butter center"><p class="eyebrow">Week ' + s.week + ', try ' + s.attempt[s.week] + '</p><h2>' + name + ' is back</h2>' +
-        '<p class="lead" style="margin:10px auto">You pick up on day ' + cur().day + ', at the first call you got wrong. You have 3 hearts again, and the buttons are in a new order, so read each one.</p>' +
-        (K.hintsOn(s) ? '<p>' + esc(HELPER) + ' is checking in. <b>Ask ' + esc(HELPER) + ' for a hint</b> appears on each turn and crosses out one wrong answer.</p>' : '') +
+        '<p class="lead" style="margin:10px auto">Back on day ' + cur().day + ' with ' + K.HEARTS + ' hearts. The buttons are shuffled.</p>' +
+        (K.hintsOn(s) ? '<p>Stuck? <b>Get a hint</b> crosses out one wrong answer.</p>' : '') +
         '<div class="after" style="justify-content:center"><button class="cta" data-act="inter" type="button" autofocus>Back to day ' + cur().day + '</button></div></div>';
     }
     return '';
@@ -3320,7 +3350,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       var quiet = r.type === 'choice' && !(r.raw.events || []).length;
       var decide = '<section class="decide" aria-label="Your move">' + d + hint + sayHtml() + continueHtml() + '</section>';
       // Turns with nothing new on the thread put the decision first.
-      body = quiet ? decide + threadHtml(r) : threadHtml(r) + decide;
+      body = repoHtml() + (quiet ? decide + threadHtml(r) : threadHtml(r) + decide);
     }
     show(weekHead() + body);
   }
@@ -3332,10 +3362,12 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       : '<div class="big-art"><canvas width="240" height="240" data-draw="big:sleepy" aria-hidden="true"></canvas></div>';
     var back = K.resolve(K.weekTurns(s.week)[K.restartIdx(s)]).day;
     var list = s.mistakes.map(function (m) { return '<li><b>' + fmt(m.label) + '</b>' + fmt(nm(m.say)) + '</li>'; }).join('');
-    show(weekHead() + '<div class="card peach center"><p class="eyebrow" style="color:#9E4A6E">Out of hearts</p><h2>' + name + ' walked out</h2>' + (s.leftAsEgg ? '<p class="soft">' + name + ' hatched early, just so it could leave.</p>' : '') + art +
+    show(weekHead() + '<div class="card peach center"><p class="eyebrow" style="color:#9E4A6E">Out of hearts</p><h2>' + name + ' walked out</h2>' +
+      '<p class="restart"><b>You don\'t start over.</b> Back to day ' + back + ', with hints on.</p>' +
+      (s.leftAsEgg ? '<p class="soft">' + name + ' hatched early, just so it could leave.</p>' : '') + art +
       '<p class="lead" style="margin:6px auto 14px">' + esc(nm(line.text)) + '</p></div>' +
       '<div class="card"><h3>What sent ' + name + ' away</h3><ul class="mistakes">' + list + '</ul>' +
-      '<h3 style="margin-top:10px">Win ' + name + ' back</h3><p class="soft">Offer a snack. Then you pick up on day ' + back + ', at the first call you got wrong.</p>' +
+      '<h3 style="margin-top:10px">Win ' + name + ' back</h3>' +
       '<div class="snacks">' + C.snacks.map(function (x) { return '<button class="cta" type="button" data-act="snack" data-id="' + esc(x) + '">Offer ' + esc(x) + '</button>'; }).join('') + '</div></div>');
   }
 
@@ -3487,8 +3519,8 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
       ui.happyUntil = Date.now() + 1800;
       report('right', { turn: r.id });
     } else {
-      ui.lostAt = s.hearts;
-      ui.said = { right: false, text: res.say, problems: res.problems || null, ghost: !!res.ghost, mood: res.option && res.option.mood };
+      ui.lostAt = res.free ? -1 : s.hearts;
+      ui.said = { right: false, free: !!res.free, text: res.say, problems: res.problems || null, ghost: !!res.ghost, mood: res.option && res.option.mood };
       if (res.ghost) { ui.ghostShow = true; setTimeout(function () { ui.ghostShow = false; }, 6000); }
       report(res.walkout ? 'walkout' : 'wrong', { turn: r.id });
       if (res.walkout) {
@@ -3532,7 +3564,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
   function act(a, el) {
     var id = el.getAttribute('data-id');
     switch (a) {
-      case 'resume': s = store.get(STORE_KEY); ui.inter = null; ui.said = null; report('resume'); render(); break;
+      case 'resume': s = K.upgrade(store.get(STORE_KEY)); ui.inter = null; ui.said = null; report('resume'); render(); break;
       case 'reset':
         if (armed(ui.resetArmed)) { store.del(STORE_KEY); s = null; ui.resetArmed = 0; } else ui.resetArmed = Date.now();
         render(); break;
@@ -3600,7 +3632,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 
   // details elements fire toggle without bubbling, so listen in the capture phase.
   document.addEventListener('toggle', function (e) {
-    if (e.target && e.target.classList && e.target.classList.contains('repo')) ui.repoClosed = !e.target.open;
+    if (e.target && e.target.classList && e.target.classList.contains('repo')) ui.repoOpen = e.target.open;
   }, true);
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-act]');
@@ -3623,7 +3655,7 @@ details.earlier .events { margin-top: 8px; opacity: 0.85; }
 
   // Boot: a saved game shows the start screen with Keep going. The demo skips
   // the room number and picks up its own save, if it has one.
-  if (DEMO) { var ds = store.get(STORE_KEY); s = ds && ds.v === 2 && ds.demo ? ds : demoState(); ui.inter = s.phase === 'intro' && !s.hatched ? { kind: 'hatch', day: 1 } : null; save(); }
+  if (DEMO) { var ds = store.get(STORE_KEY); s = ds && ds.v === 2 && ds.demo ? K.upgrade(ds) : demoState(); ui.inter = s.phase === 'intro' && !s.hatched ? { kind: 'hatch', day: 1 } : null; save(); }
   render();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { tick(); });
 })();
